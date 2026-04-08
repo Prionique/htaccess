@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EternalAI Generator</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+}
+
+h2 {
+  margin-top: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 15px;
+}
+
+.card {
+  background: #1e293b;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: scale(1.03);
+}
+
+.card.active {
+  border: 2px solid #38bdf8;
+}
+
+img {
+  width: 100%;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px;
+  background: #38bdf8;
+  border: none;
+  color: black;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.topbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#status {
+  margin-top: 10px;
+}
+
+#result img {
+  margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>EternalAI Generator</h1>
+
+<div class="topbar">
+  <h2 id="balance">Balance: ...</h2>
+  <button onclick="claimDaily()">🎁 Claim Daily</button>
+</div>
+
+<div class="topbar">
+  <div id="apiKeyDisplay">API Key: ...</div>
+  <button onclick="changeApiKey()">🔑 Change API Key</button>
+</div>
+
+<h2>Select Effect</h2>
+<div id="effects" class="grid"></div>
+
+<h2>Upload Image</h2>
+<input type="file" id="fileInput" accept="image/*" />
+
+<br>
+<button onclick="generate()">Generate</button>
+
+<h3 id="status"></h3>
+
+<div id="result"></div>
+
+<script>
+let API_KEY = null;
+let selectedEffect = null;
+let base64Image = null;
+
+// =======================
+// API KEY HANDLING
+// =======================
+function initApiKey() {
+  const savedKey = localStorage.getItem("eternal_api_key");
+
+  if (!savedKey) {
+    const key = prompt("Enter your EternalAI API Key:");
+    if (!key) return alert("API key required");
+
+    localStorage.setItem("eternal_api_key", key);
+    API_KEY = key;
+  } else {
+    API_KEY = savedKey;
+  }
+
+  updateApiKeyDisplay();
+}
+
+function updateApiKeyDisplay() {
+  const shortKey = API_KEY.slice(0, 8) + "..." + API_KEY.slice(-4);
+  document.getElementById("apiKeyDisplay").innerText =
+    "API Key: " + shortKey;
+}
+
+function changeApiKey() {
+  const key = prompt("Enter new API key:");
+  if (!key) return;
+
+  localStorage.setItem("eternal_api_key", key);
+  API_KEY = key;
+
+  updateApiKeyDisplay();
+  loadBalance();
+}
+
+// =======================
+// FILE → BASE64
+// =======================
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    base64Image = reader.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// =======================
+// LOAD BALANCE
+// =======================
+async function loadBalance() {
+  try {
+    const res = await fetch("https://open.eternalai.org/v1/balance", {
+      headers: {
+        "x-api-key": API_KEY
+      }
+    });
+
+    const data = await res.json();
+    console.log("balance:", data);
+
+    document.getElementById("balance").innerText =
+      "Balance: " + (data.diamond_balance || 0);
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("balance").innerText = "Balance: error";
+  }
+}
+
+// =======================
+// CLAIM DAILY
+// =======================
+async function claimDaily() {
+  try {
+    const res = await fetch(
+      "https://agent.api.eternalai.org/api/feed/data/checkin/daily",
+      {
+        method: "POST",
+        credentials: "include"
+      }
+    );
+
+    const data = await res.json();
+    console.log(data);
+
+    alert("Claimed daily reward!");
+  } catch (err) {
+    console.error(err);
+    alert("Failed (you must be logged in)");
+  }
+}
+
+// =======================
+// LOAD EFFECTS
+// =======================
+async function loadEffects() {
+  try {
+    const res = await fetch("https://open.eternalai.org/creative-ai/effects?effect_type=image");
+    const data = await res.json();
+
+    const effects = data.effects || data.data || data;
+
+    const container = document.getElementById("effects");
+    container.innerHTML = "";
+
+    effects.forEach(effect => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const preview = effect.sampleOutputURL || "";
+
+      card.innerHTML = `
+        <div>
+          <small>${effect.effect_id}</small><br>
+          💰 ${effect.price}
+        </div>
+        ${preview ? `<img src="${preview}" />` : ""}
+      `;
+
+      card.onclick = () => {
+        document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+        selectedEffect = effect.effect_id;
+      };
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// =======================
+// GENERATE
+// =======================
+async function generate() {
+  if (!selectedEffect) return alert("Select effect");
+  if (!base64Image) return alert("Upload image");
+
+  document.getElementById("status").innerText = "Sending request...";
+
+  try {
+    const res = await fetch("https://open.eternalai.org/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY
+      },
+      body: JSON.stringify({
+        images: [base64Image],
+        effect_id: selectedEffect
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.request_id) {
+      alert("Error");
+      return;
+    }
+
+    pollResult(data.request_id);
+
+  } catch (err) {
+    console.error(err);
+    alert("Failed");
+  }
+}
+
+// =======================
+// POLL RESULT
+// =======================
+function pollResult(requestId) {
+  const statusEl = document.getElementById("status");
+
+  const interval = setInterval(async () => {
+    const res = await fetch(`https://open.eternalai.org/poll-result/${requestId}`);
+    const data = await res.json();
+
+    statusEl.innerText = `Status: ${data.status} (${data.progress || 0}%)`;
+
+    if (data.status === "success") {
+      clearInterval(interval);
+
+      const resultUrl = data.result_url || data.result;
+
+      document.getElementById("result").innerHTML = `
+        <h2>Result</h2>
+        <img src="${resultUrl}" />
+      `;
+
+      loadBalance();
+    }
+
+    if (data.status === "failed") {
+      clearInterval(interval);
+      statusEl.innerText = "Failed";
+    }
+
+  }, 3000);
+}
+
+// =======================
+// INIT
+// =======================
+initApiKey();
+loadEffects();
+setTimeout(loadBalance, 500);
+</script>
+
+</body>
+</html>
