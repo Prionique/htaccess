@@ -2,326 +2,428 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>EternalAI Generator</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EternalAI</title>
 <style>
-body {
-  font-family: Arial;
-  background: #0f172a;
-  color: white;
-  padding: 20px;
-}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-h2 {
-  margin-top: 20px;
-}
+  :root {
+    --bg: #fff;
+    --surface: #f7f7f7;
+    --border: #e8e8e8;
+    --text: #111;
+    --muted: #888;
+    --radius: 10px;
+  }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 15px;
-}
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
 
-.card {
-  background: #1e293b;
-  padding: 10px;
-  border-radius: 10px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: 0.2s;
-}
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 0.5px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
 
-.card:hover {
-  transform: scale(1.03);
-}
+  .logo { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
 
-.card.active {
-  border: 2px solid #38bdf8;
-}
+  .header-right { display: flex; align-items: center; gap: 8px; }
 
-img {
-  width: 100%;
-  border-radius: 8px;
-  margin-top: 5px;
-}
+  .badge {
+    font-size: 12px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 99px;
+    padding: 4px 10px;
+    color: var(--muted);
+  }
+  .badge strong { color: var(--text); font-weight: 500; }
 
-button {
-  margin-top: 10px;
-  padding: 10px;
-  background: #38bdf8;
-  border: none;
-  color: black;
-  cursor: pointer;
-  font-weight: bold;
-}
+  .icon-btn {
+    width: 34px; height: 34px;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    color: var(--text);
+    transition: background 0.1s;
+  }
+  .icon-btn:active { background: var(--surface); }
 
-button:hover {
-  opacity: 0.9;
-}
+  main { padding: 20px; max-width: 600px; margin: 0 auto; }
 
-.topbar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
+  .key-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 24px;
+  }
+  .key-val {
+    flex: 1;
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--muted);
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .text-btn {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    background: transparent;
+    border: 0.5px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s;
+  }
+  .text-btn:active { background: var(--surface); }
 
-#status {
-  margin-top: 10px;
-}
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
 
-#result img {
-  margin-top: 20px;
-}
+  .effects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  @media (min-width: 480px) {
+    .effects-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .effect-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .effect-card:active { background: #efefef; }
+  .effect-card.active {
+    border: 1.5px solid var(--text);
+    background: var(--bg);
+  }
+  .effect-card img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+    margin-top: 8px;
+    background: var(--border);
+  }
+  .effect-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .effect-price { font-size: 11px; color: var(--muted); }
+
+  .skel {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    height: 140px;
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.5; }
+  }
+
+  .upload-zone {
+    border: 0.5px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 28px;
+    position: relative;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .upload-zone:active { background: var(--surface); }
+  .upload-zone input {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .upload-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+  .upload-preview {
+    width: 100%; max-height: 220px; object-fit: cover;
+    border-radius: 8px; margin-top: 14px; display: none;
+  }
+
+  .generate-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--text);
+    color: var(--bg);
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-bottom: 16px;
+    letter-spacing: -0.2px;
+  }
+  .generate-btn:active { opacity: 0.8; }
+  .generate-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .status {
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 20px;
+    min-height: 18px;
+  }
+
+  .result-wrap { margin-bottom: 40px; }
+  .result-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+  .result-img {
+    width: 100%;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    display: block;
+  }
 </style>
 </head>
-
 <body>
 
-<h1>EternalAI Generator</h1>
+<header>
+  <span class="logo">EternalAI</span>
+  <div class="header-right">
+    <span class="badge">⬡ <strong id="balance">...</strong></span>
+    <button class="icon-btn" onclick="claimDaily()" title="Claim daily">🎁</button>
+  </div>
+</header>
 
-<div class="topbar">
-  <h2 id="balance">Balance: ...</h2>
-  <button onclick="claimDaily()">🎁 Claim Daily</button>
-</div>
+<main>
+  <div class="key-row">
+    <span class="key-val" id="apiKeyDisplay">No key set</span>
+    <button class="text-btn" onclick="changeApiKey()">Change key</button>
+  </div>
 
-<div class="topbar">
-  <div id="apiKeyDisplay">API Key: ...</div>
-  <button onclick="changeApiKey()">🔑 Change API Key</button>
-</div>
+  <div class="label">Effects</div>
+  <div id="effects" class="effects-grid">
+    <div class="skel"></div>
+    <div class="skel"></div>
+    <div class="skel"></div>
+    <div class="skel"></div>
+  </div>
 
-<h2>Select Effect</h2>
-<div id="effects" class="grid"></div>
+  <div class="label">Image</div>
+  <div class="upload-zone">
+    <input type="file" id="fileInput" accept="image/*" capture="environment" />
+    <span class="upload-icon">↑</span>
+    <span id="uploadLabel">Tap to upload a photo</span>
+    <img id="uploadPreview" class="upload-preview" />
+  </div>
 
-<h2>Upload Image</h2>
-<input type="file" id="fileInput" accept="image/*" />
+  <button class="generate-btn" onclick="generate()" id="genBtn">Generate</button>
 
-<br>
-<button onclick="generate()">Generate</button>
+  <div class="status" id="statusText"></div>
 
-<h3 id="status"></h3>
-
-<div id="result"></div>
+  <div id="result"></div>
+</main>
 
 <script>
 let API_KEY = null;
 let selectedEffect = null;
 let base64Image = null;
 
-// =======================
-// API KEY HANDLING
-// =======================
 function initApiKey() {
-  const savedKey = localStorage.getItem("eternal_api_key");
-
-  if (!savedKey) {
+  const saved = localStorage.getItem("eternal_api_key");
+  if (!saved) {
     const key = prompt("Enter your EternalAI API Key:");
-    if (!key) return alert("API key required");
-
+    if (!key) return;
     localStorage.setItem("eternal_api_key", key);
     API_KEY = key;
   } else {
-    API_KEY = savedKey;
+    API_KEY = saved;
   }
-
-  updateApiKeyDisplay();
+  updateKeyDisplay();
+  loadBalance();
 }
 
-function updateApiKeyDisplay() {
-  const shortKey = API_KEY.slice(0, 8) + "..." + API_KEY.slice(-4);
-  document.getElementById("apiKeyDisplay").innerText =
-    "API Key: " + shortKey;
+function updateKeyDisplay() {
+  if (!API_KEY) return;
+  document.getElementById("apiKeyDisplay").textContent =
+    API_KEY.slice(0, 6) + "···" + API_KEY.slice(-4);
 }
 
 function changeApiKey() {
   const key = prompt("Enter new API key:");
   if (!key) return;
-
   localStorage.setItem("eternal_api_key", key);
   API_KEY = key;
-
-  updateApiKeyDisplay();
+  updateKeyDisplay();
   loadBalance();
 }
 
-// =======================
-// FILE → BASE64
-// =======================
-document.getElementById("fileInput").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    base64Image = reader.result;
-  };
-  reader.readAsDataURL(file);
-});
-
-// =======================
-// LOAD BALANCE
-// =======================
 async function loadBalance() {
+  if (!API_KEY) return;
   try {
     const res = await fetch("https://open.eternalai.org/v1/balance", {
-      headers: {
-        "x-api-key": API_KEY
-      }
+      headers: { "x-api-key": API_KEY }
     });
-
     const data = await res.json();
-    console.log("balance:", data);
-
-    document.getElementById("balance").innerText =
-      "Balance: " + (data.diamond_balance || 0);
-
-  } catch (err) {
-    console.error(err);
-    document.getElementById("balance").innerText = "Balance: error";
+    document.getElementById("balance").textContent = data.diamond_balance ?? "—";
+  } catch {
+    document.getElementById("balance").textContent = "err";
   }
 }
 
-// =======================
-// CLAIM DAILY
-// =======================
 async function claimDaily() {
   try {
-    const res = await fetch(
-      "https://agent.api.eternalai.org/api/feed/data/checkin/daily",
-      {
-        method: "POST",
-        credentials: "include"
-      }
-    );
-
-    const data = await res.json();
-    console.log(data);
-
-    alert("Claimed daily reward!");
-  } catch (err) {
-    console.error(err);
-    alert("Failed (you must be logged in)");
+    await fetch("https://agent.api.eternalai.org/api/feed/data/checkin/daily", {
+      method: "POST", credentials: "include"
+    });
+    alert("Daily reward claimed!");
+  } catch {
+    alert("Failed — must be logged in.");
   }
 }
 
-// =======================
-// LOAD EFFECTS
-// =======================
 async function loadEffects() {
   try {
     const res = await fetch("https://open.eternalai.org/creative-ai/effects?effect_type=image");
     const data = await res.json();
-
     const effects = data.effects || data.data || data;
-
     const container = document.getElementById("effects");
     container.innerHTML = "";
-
     effects.forEach(effect => {
       const card = document.createElement("div");
-      card.className = "card";
-
-      const preview = effect.sampleOutputURL || "";
-
+      card.className = "effect-card";
       card.innerHTML = `
-        <div>
-          <small>${effect.effect_id}</small><br>
-          💰 ${effect.price}
-        </div>
-        ${preview ? `<img src="${preview}" />` : ""}
+        <div class="effect-name">${effect.effect_id}</div>
+        <div class="effect-price">⬡ ${effect.price}</div>
+        ${effect.sampleOutputURL ? `<img src="${effect.sampleOutputURL}" loading="lazy" />` : ""}
       `;
-
       card.onclick = () => {
-        document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+        document.querySelectorAll(".effect-card").forEach(c => c.classList.remove("active"));
         card.classList.add("active");
         selectedEffect = effect.effect_id;
       };
-
       container.appendChild(card);
     });
-
-  } catch (err) {
-    console.error(err);
+  } catch {
+    document.getElementById("effects").innerHTML =
+      '<p style="font-size:13px;color:var(--muted);grid-column:1/-1;">Could not load effects.</p>';
   }
 }
 
-// =======================
-// GENERATE
-// =======================
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    base64Image = reader.result;
+    const preview = document.getElementById("uploadPreview");
+    preview.src = base64Image;
+    preview.style.display = "block";
+    document.getElementById("uploadLabel").textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+});
+
 async function generate() {
-  if (!selectedEffect) return alert("Select effect");
-  if (!base64Image) return alert("Upload image");
-
-  document.getElementById("status").innerText = "Sending request...";
-
+  if (!selectedEffect) return alert("Select an effect first.");
+  if (!base64Image) return alert("Upload an image first.");
+  const btn = document.getElementById("genBtn");
+  const status = document.getElementById("statusText");
+  btn.disabled = true;
+  btn.textContent = "Sending…";
+  status.textContent = "";
   try {
     const res = await fetch("https://open.eternalai.org/generate", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": API_KEY
-      },
-      body: JSON.stringify({
-        images: [base64Image],
-        effect_id: selectedEffect
-      })
+      headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+      body: JSON.stringify({ images: [base64Image], effect_id: selectedEffect })
     });
-
     const data = await res.json();
-
     if (!data.request_id) {
-      alert("Error");
+      alert("Error: no request ID returned.");
+      btn.disabled = false; btn.textContent = "Generate";
       return;
     }
-
     pollResult(data.request_id);
-
-  } catch (err) {
-    console.error(err);
-    alert("Failed");
+  } catch {
+    status.textContent = "Request failed.";
+    btn.disabled = false; btn.textContent = "Generate";
   }
 }
 
-// =======================
-// POLL RESULT
-// =======================
-function pollResult(requestId) {
-  const statusEl = document.getElementById("status");
-
+function pollResult(id) {
+  const status = document.getElementById("statusText");
+  const btn = document.getElementById("genBtn");
+  btn.textContent = "Processing…";
   const interval = setInterval(async () => {
-    const res = await fetch(`https://open.eternalai.org/poll-result/${requestId}`);
-    const data = await res.json();
-
-    statusEl.innerText = `Status: ${data.status} (${data.progress || 0}%)`;
-
-    if (data.status === "success") {
+    try {
+      const res = await fetch(`https://open.eternalai.org/poll-result/${id}`);
+      const data = await res.json();
+      status.textContent = `${data.status} — ${data.progress || 0}%`;
+      if (data.status === "success") {
+        clearInterval(interval);
+        status.textContent = "Done.";
+        btn.disabled = false; btn.textContent = "Generate";
+        const url = data.result_url || data.result;
+        document.getElementById("result").innerHTML = `
+          <div class="result-wrap">
+            <div class="result-label">Result</div>
+            <img class="result-img" src="${url}" />
+          </div>`;
+        loadBalance();
+      }
+      if (data.status === "failed") {
+        clearInterval(interval);
+        status.textContent = "Generation failed.";
+        btn.disabled = false; btn.textContent = "Generate";
+      }
+    } catch {
       clearInterval(interval);
-
-      const resultUrl = data.result_url || data.result;
-
-      document.getElementById("result").innerHTML = `
-        <h2>Result</h2>
-        <img src="${resultUrl}" />
-      `;
-
-      loadBalance();
+      status.textContent = "Polling error.";
+      btn.disabled = false; btn.textContent = "Generate";
     }
-
-    if (data.status === "failed") {
-      clearInterval(interval);
-      statusEl.innerText = "Failed";
-    }
-
   }, 3000);
 }
 
-// =======================
-// INIT
-// =======================
 initApiKey();
 loadEffects();
-setTimeout(loadBalance, 500);
 </script>
-
 </body>
 </html>
