@@ -334,7 +334,7 @@ async function claimDaily() {
 
 async function loadEffects() {
   try {
-    const res = await fetch("https://open.eternalai.org/creative-ai/effects?effect_type=image");
+    const res = await fetch("https://open.eternalai.org/v2/effects?effect_type=image");
     const data = await res.json();
     const effects = data.effects || data.data || data;
     const container = document.getElementById("effects");
