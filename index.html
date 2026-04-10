@@ -385,7 +385,7 @@ async function generate() {
   btn.textContent = "Sending…";
   status.textContent = "";
   try {
-    const res = await fetch("https://open.eternalai.org/v2/generate", {
+    const res = await fetch("https://open.eternalai.org/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
       body: JSON.stringify({ images: [base64Image], effect_id: selectedEffect })
