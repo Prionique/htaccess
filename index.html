@@ -385,7 +385,7 @@ async function generate() {
   btn.textContent = "Sending…";
   status.textContent = "";
   try {
-    const res = await fetch("https://open.eternalai.org/generate", {
+    const res = await fetch("https://open.eternalai.org/v2/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
       body: JSON.stringify({ images: [base64Image], effect_id: selectedEffect })
@@ -409,7 +409,7 @@ function pollResult(id) {
   btn.textContent = "Processing…";
   const interval = setInterval(async () => {
     try {
-      const res = await fetch(`https://open.eternalai.org/poll-result/${id}`);
+      const res = await fetch(`https://open.eternalai.org/v2/poll-result/${id}`);
       const data = await res.json();
       status.textContent = `${data.status} — ${data.progress || 0}%`;
       if (data.status === "success") {
